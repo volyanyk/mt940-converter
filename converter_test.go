@@ -32,3 +32,38 @@ func TestTransactionReferenceCase(t *testing.T) {
 		}
 	}
 }
+
+func TestAccountIdentificationCase(t *testing.T) {
+	type testCase struct {
+		name           string
+		input          string
+		expectedResult *AccountIdentification
+		hasError       bool
+	}
+
+	testTable := []testCase{
+		{name: "Account identification is correct", input: ":25:NL17RABO6064103256EUR\r\n", expectedResult: &AccountIdentification{
+			CountryIso: "NL",
+			Iban:       "17RABO6064103256",
+			Currency:   "EUR",
+		}, hasError: false},
+		{name: "Account identification is empty", input: ":25:\r\n", expectedResult: &AccountIdentification{
+			CountryIso: "",
+			Iban:       "",
+			Currency:   "",
+		}, hasError: false},
+		{name: "Account identification not found", input: "NL17RABO6064103256EUR\r\n", expectedResult: nil, hasError: true},
+		{name: "Account identification is too long", input: ":25:NI81CCSF6843126715474931687323111UAH\r\n", expectedResult: nil, hasError: true},
+	}
+
+	for _, test := range testTable {
+		actual, err := GetReferenceNumber(test.input)
+		assert.Equal(t, test.expectedResult, actual, test.name)
+
+		if test.hasError {
+			assert.NotNil(t, err, test.name)
+		} else {
+			assert.Nil(t, err, test.name)
+		}
+	}
+}

@@ -26,3 +26,14 @@ func GetReferenceNumber(input string) (*ReferenceNumber, error) {
 	}
 	return &ReferenceNumber{Value: result}, nil
 }
+
+type AccountIdentification struct {
+	CountryIso string
+	Iban       string
+	Currency   string
+}
+
+func GetAccountIdentification(input string) (*AccountIdentification, error) {
+
+	return nil, nil
+}
