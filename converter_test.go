@@ -10,15 +10,15 @@ func TestTransactionReferenceCase(t *testing.T) {
 	type testCase struct {
 		name           string
 		input          string
-		expectedResult ReferenceNumber
+		expectedResult *ReferenceNumber
 		hasError       bool
 	}
 
 	testTable := []testCase{
-		{name: "Reference number is correct", input: ":20:referenceNumber1\r\n", expectedResult: ReferenceNumber{Value: "referenceNumber1"}, hasError: false},
-		{name: "Reference number is empty", input: ":20:\r\n", expectedResult: ReferenceNumber{Value: ""}, hasError: false},
-		{name: "Reference number is too long", input: ":20:referenceNumber12\r\n", expectedResult: ReferenceNumber{Value: ""}, hasError: true},
-		{name: "Reference tag not found", input: ":0:testReferenceNumber\r\n", expectedResult: ReferenceNumber{Value: ""}, hasError: true},
+		{name: "Reference number is correct", input: ":20:referenceNumber1\r\n", expectedResult: &ReferenceNumber{Value: "referenceNumber1"}, hasError: false},
+		{name: "Reference number is empty", input: ":20:\r\n", expectedResult: &ReferenceNumber{Value: ""}, hasError: false},
+		{name: "Reference number is too long", input: ":20:referenceNumber12\r\n", expectedResult: nil, hasError: true},
+		{name: "Reference tag not found", input: ":0:testReferenceNumber\r\n", expectedResult: nil, hasError: true},
 	}
 
 	for _, test := range testTable {
