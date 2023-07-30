@@ -47,17 +47,18 @@ func TestAccountIdentificationCase(t *testing.T) {
 			Iban:       "17RABO6064103256",
 			Currency:   "EUR",
 		}, hasError: false},
-		{name: "Account identification is empty", input: ":25:\r\n", expectedResult: &AccountIdentification{
-			CountryIso: "",
-			Iban:       "",
+		{name: "Account identification is correct, even without currency", input: ":25:NL17RABO6064103256\r\n", expectedResult: &AccountIdentification{
+			CountryIso: "NL",
+			Iban:       "17RABO6064103256",
 			Currency:   "",
 		}, hasError: false},
+		{name: "Account identification is empty", input: ":25:\r\n", expectedResult: nil, hasError: true},
 		{name: "Account identification not found", input: "NL17RABO6064103256EUR\r\n", expectedResult: nil, hasError: true},
 		{name: "Account identification is too long", input: ":25:NI81CCSF6843126715474931687323111UAH\r\n", expectedResult: nil, hasError: true},
 	}
 
 	for _, test := range testTable {
-		actual, err := GetReferenceNumber(test.input)
+		actual, err := GetAccountIdentification(test.input)
 		assert.Equal(t, test.expectedResult, actual, test.name)
 
 		if test.hasError {
