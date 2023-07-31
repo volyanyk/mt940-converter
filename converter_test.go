@@ -95,3 +95,30 @@ func TestRelatedReferenceCase(t *testing.T) {
 		}
 	}
 }
+
+func TestStatementNumberCase(t *testing.T) {
+	type testCase struct {
+		name           string
+		input          string
+		expectedResult *StatementNumber
+		hasError       bool
+	}
+
+	testTable := []testCase{
+		{name: "Statement number is correct", input: ":25:44444\r\n", expectedResult: &StatementNumber{Value: "44444"}, hasError: false},
+		{name: "Statement number is empty", input: ":25:\r\n", expectedResult: &StatementNumber{Value: ""}, hasError: false},
+		{name: "Statement number is too long", input: ":25:555555\r\n", expectedResult: nil, hasError: true},
+		{name: "Statement number tag not found", input: ":0:01234\r\n", expectedResult: nil, hasError: true},
+	}
+
+	for _, test := range testTable {
+		actual, err := GetStatementNumber(test.input)
+		assert.Equal(t, test.expectedResult, actual, test.name)
+
+		if test.hasError {
+			assert.NotNil(t, err, test.name)
+		} else {
+			assert.Nil(t, err, test.name)
+		}
+	}
+}
