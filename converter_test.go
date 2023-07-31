@@ -105,10 +105,10 @@ func TestStatementNumberCase(t *testing.T) {
 	}
 
 	testTable := []testCase{
-		{name: "Statement number is correct", input: ":25:44444\r\n", expectedResult: &StatementNumber{Value: "44444"}, hasError: false},
-		{name: "Statement number is empty", input: ":25:\r\n", expectedResult: &StatementNumber{Value: ""}, hasError: false},
-		{name: "Statement number is too long", input: ":25:555555\r\n", expectedResult: nil, hasError: true},
-		{name: "Statement number tag not found", input: ":0:01234\r\n", expectedResult: nil, hasError: true},
+		{name: "Statement number is correct", input: ":28C:44444\r\n", expectedResult: &StatementNumber{Value: "44444"}, hasError: false},
+		{name: "Statement number is empty", input: ":28C:\r\n", expectedResult: &StatementNumber{Value: ""}, hasError: false},
+		{name: "Statement number is too long", input: ":28C:555555\r\n", expectedResult: nil, hasError: true},
+		{name: "Statement number tag not found", input: ":28:01234\r\n", expectedResult: nil, hasError: true},
 	}
 
 	for _, test := range testTable {

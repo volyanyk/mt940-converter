@@ -11,6 +11,7 @@ const (
 	referenceNumber       = ":20:"
 	relatedReference      = ":21:"
 	accountIdentification = ":25:"
+	statementNumber       = ":28C:"
 )
 
 type ReferenceNumber struct {
@@ -18,6 +19,15 @@ type ReferenceNumber struct {
 }
 type RelatedReference struct {
 	Value string
+}
+type StatementNumber struct {
+	Value string
+}
+
+type AccountIdentification struct {
+	CountryIso string
+	Iban       string
+	Currency   string
 }
 
 func GetReferenceNumber(input string) (*ReferenceNumber, error) {
@@ -32,6 +42,7 @@ func GetReferenceNumber(input string) (*ReferenceNumber, error) {
 	}
 	return &ReferenceNumber{Value: result}, nil
 }
+
 func GetRelatedReference(input string) (*RelatedReference, error) {
 
 	if !strings.Contains(input, relatedReference) {
@@ -44,13 +55,6 @@ func GetRelatedReference(input string) (*RelatedReference, error) {
 	}
 	return &RelatedReference{Value: result}, nil
 }
-
-type AccountIdentification struct {
-	CountryIso string
-	Iban       string
-	Currency   string
-}
-
 func GetAccountIdentification(input string) (*AccountIdentification, error) {
 	if !strings.Contains(input, accountIdentification) {
 		return nil, fmt.Errorf("no account identification tag found. Expected tag: %s", accountIdentification)
@@ -79,6 +83,19 @@ func GetAccountIdentification(input string) (*AccountIdentification, error) {
 		Iban:       iban,
 		Currency:   currency,
 	}, nil
+}
+
+func GetStatementNumber(input string) (*StatementNumber, error) {
+
+	if !strings.Contains(input, statementNumber) {
+		return nil, fmt.Errorf("no statement number tag found. Expected tag: %s", statementNumber)
+	}
+	index := strings.Index(input, crlf)
+	result := input[len(statementNumber):index]
+	if len(result) > 5 {
+		return nil, fmt.Errorf("the statement number character size is bigger than 5. Size: %v", len(input))
+	}
+	return &StatementNumber{Value: result}, nil
 }
 
 func GetLastNChars(input string, number int) string {
