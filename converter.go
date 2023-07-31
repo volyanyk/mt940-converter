@@ -32,6 +32,18 @@ func GetReferenceNumber(input string) (*ReferenceNumber, error) {
 	}
 	return &ReferenceNumber{Value: result}, nil
 }
+func GetRelatedReference(input string) (*RelatedReference, error) {
+
+	if !strings.Contains(input, relatedReference) {
+		return nil, fmt.Errorf("no related reference tag found. Expected tag: %s", relatedReference)
+	}
+	index := strings.Index(input, crlf)
+	result := input[len(relatedReference):index]
+	if len(result) > 16 {
+		return nil, fmt.Errorf("the related reference character size is bigger than 16. Size: %v", len(input))
+	}
+	return &RelatedReference{Value: result}, nil
+}
 
 type AccountIdentification struct {
 	CountryIso string
