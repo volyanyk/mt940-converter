@@ -2,7 +2,9 @@ package mt940_converter
 
 import (
 	"testing"
+	"time"
 
+	"github.com/shopspring/decimal"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -113,6 +115,38 @@ func TestStatementNumberCase(t *testing.T) {
 
 	for _, test := range testTable {
 		actual, err := GetStatementNumber(test.input)
+		assert.Equal(t, test.expectedResult, actual, test.name)
+
+		if test.hasError {
+			assert.NotNil(t, err, test.name)
+		} else {
+			assert.Nil(t, err, test.name)
+		}
+	}
+}
+func TestOpeningBalanceCase(t *testing.T) {
+	type testCase struct {
+		name           string
+		input          string
+		expectedResult *OpeningBalance
+		hasError       bool
+	}
+
+	testTable := []testCase{
+		{name: "Opening balance is correct", input: ":60F:C120216UAH73447,91\r\n", expectedResult: &OpeningBalance{
+			Type:     CREDIT,
+			Date:     time.Date(2016, 02, 12, 0, 0, 0, 0, time.Local),
+			Currency: "UAH",
+			Amount:   decimal.New(7344791, -2),
+		}, hasError: false},
+		{name: "Statement number is empty", input: ":60F:\r\n", expectedResult: nil, hasError: true},
+		{name: "Statement number is too short", input: ":60F:C\r\n", expectedResult: nil, hasError: true},
+		{name: "Statement number is too long", input: ":60F:C120216UAH73447,9wwww\r\n", expectedResult: nil, hasError: true},
+		{name: "Statement number tag not found", input: ":60:01234\r\n", expectedResult: nil, hasError: true},
+	}
+
+	for _, test := range testTable {
+		actual, err := GetOpeningBalance(test.input)
 		assert.Equal(t, test.expectedResult, actual, test.name)
 
 		if test.hasError {

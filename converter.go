@@ -3,7 +3,10 @@ package mt940_converter
 import (
 	"fmt"
 	"strings"
+	"time"
 	"unicode"
+
+	"github.com/shopspring/decimal"
 )
 
 const (
@@ -28,6 +31,19 @@ type AccountIdentification struct {
 	CountryIso string
 	Iban       string
 	Currency   string
+}
+type TransactionType string
+
+const (
+	DEBIT  TransactionType = "D"
+	CREDIT                 = "C"
+)
+
+type OpeningBalance struct {
+	Type     TransactionType
+	Date     time.Time
+	Currency string
+	Amount   decimal.Decimal
 }
 
 func GetReferenceNumber(input string) (*ReferenceNumber, error) {
