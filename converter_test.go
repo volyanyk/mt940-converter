@@ -68,3 +68,30 @@ func TestAccountIdentificationCase(t *testing.T) {
 		}
 	}
 }
+
+func TestRelatedReferenceCase(t *testing.T) {
+	type testCase struct {
+		name           string
+		input          string
+		expectedResult *RelatedReference
+		hasError       bool
+	}
+
+	testTable := []testCase{
+		{name: "Related reference is correct", input: ":21:relatedReference\r\n", expectedResult: &RelatedReference{Value: "referenceNumber1"}, hasError: false},
+		{name: "Related reference is empty", input: ":21:\r\n", expectedResult: &RelatedReference{Value: ""}, hasError: false},
+		{name: "Related reference is too long", input: ":21:relatedReference12\r\n", expectedResult: nil, hasError: true},
+		{name: "Related reference tag not found", input: ":0:relatedReference\r\n", expectedResult: nil, hasError: true},
+	}
+
+	for _, test := range testTable {
+		actual, err := GetRelatedReference(test.input)
+		assert.Equal(t, test.expectedResult, actual, test.name)
+
+		if test.hasError {
+			assert.NotNil(t, err, test.name)
+		} else {
+			assert.Nil(t, err, test.name)
+		}
+	}
+}

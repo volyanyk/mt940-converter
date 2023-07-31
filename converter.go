@@ -9,10 +9,14 @@ import (
 const (
 	crlf                  = "\r\n"
 	referenceNumber       = ":20:"
+	relatedReference      = ":21:"
 	accountIdentification = ":25:"
 )
 
 type ReferenceNumber struct {
+	Value string
+}
+type RelatedReference struct {
 	Value string
 }
 
