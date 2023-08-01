@@ -2,10 +2,11 @@ package mt940_converter
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
-	"time"
 	"unicode"
 
+	"github.com/rs/zerolog/log"
 	"github.com/shopspring/decimal"
 )
 
@@ -15,6 +16,7 @@ const (
 	relatedReference      = ":21:"
 	accountIdentification = ":25:"
 	statementNumber       = ":28C:"
+	openingBalance        = ":60F:"
 )
 
 type ReferenceNumber struct {
@@ -32,6 +34,11 @@ type AccountIdentification struct {
 	Iban       string
 	Currency   string
 }
+type InternalDate struct {
+	Year  int64
+	Month int64
+	Day   int64
+}
 type TransactionType string
 
 const (
@@ -39,11 +46,13 @@ const (
 	CREDIT                 = "C"
 )
 
+type MyDecimal decimal.Decimal
+
 type OpeningBalance struct {
 	Type     TransactionType
-	Date     time.Time
+	Date     InternalDate
 	Currency string
-	Amount   decimal.Decimal
+	Amount   MyDecimal
 }
 
 func GetReferenceNumber(input string) (*ReferenceNumber, error) {
@@ -71,6 +80,7 @@ func GetRelatedReference(input string) (*RelatedReference, error) {
 	}
 	return &RelatedReference{Value: result}, nil
 }
+
 func GetAccountIdentification(input string) (*AccountIdentification, error) {
 	if !strings.Contains(input, accountIdentification) {
 		return nil, fmt.Errorf("no account identification tag found. Expected tag: %s", accountIdentification)
@@ -112,6 +122,62 @@ func GetStatementNumber(input string) (*StatementNumber, error) {
 		return nil, fmt.Errorf("the statement number character size is bigger than 5. Size: %v", len(input))
 	}
 	return &StatementNumber{Value: result}, nil
+}
+
+func GetOpeningBalance(input string) (*OpeningBalance, error) {
+	/* C120216UAH73447,91 */
+	if !strings.Contains(input, openingBalance) {
+		return nil, fmt.Errorf("no opening balance tag found. Expected tag: %s", openingBalance)
+	}
+	index := strings.Index(input, crlf)
+	result := input[len(openingBalance):index]
+	if len(result) > 25 || len(result) < 10 {
+		return nil, fmt.Errorf("the opening balance character size is incorrect. Size: %v", len(input))
+	}
+	amount, err := GetDecimal(result[10:])
+	if err != nil {
+		return nil, fmt.Errorf("cannot parse amount. Error: %v", err)
+	}
+
+	return &OpeningBalance{
+		Type:     TransactionType(GetFirstNChars(result, 1)),
+		Date:     GetInternalDate(result[1:7]),
+		Currency: result[7:10],
+		Amount:   amount,
+	}, nil
+}
+
+func GetInternalDate(s string) InternalDate {
+	if len(s) > 6 && len(s) < 1 {
+		log.Error().Msg("Incorrect date length")
+		return InternalDate{}
+	}
+	year, err := strconv.ParseInt(s[0:2], 10, 8)
+	month, err := strconv.ParseInt(s[2:4], 10, 8)
+	day, err := strconv.ParseInt(s[4:6], 10, 8)
+
+	if err != nil {
+		log.Err(err)
+		return InternalDate{}
+	}
+
+	return InternalDate{
+		Year:  year,
+		Month: month,
+		Day:   day,
+	}
+}
+
+func GetDecimal(s string) (MyDecimal, error) {
+	numberWithoutComma := strings.ReplaceAll(s, ",", "")
+
+	decimalNumber, err := decimal.NewFromString(numberWithoutComma)
+	if err != nil {
+		log.Err(err)
+		return MyDecimal{}, err
+	}
+
+	return MyDecimal(decimalNumber.Div(decimal.NewFromInt(100))), nil
 }
 
 func GetLastNChars(input string, number int) string {

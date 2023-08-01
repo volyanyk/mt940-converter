@@ -2,9 +2,7 @@ package mt940_converter
 
 import (
 	"testing"
-	"time"
 
-	"github.com/shopspring/decimal"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -124,6 +122,7 @@ func TestStatementNumberCase(t *testing.T) {
 		}
 	}
 }
+
 func TestOpeningBalanceCase(t *testing.T) {
 	type testCase struct {
 		name           string
@@ -132,12 +131,28 @@ func TestOpeningBalanceCase(t *testing.T) {
 		hasError       bool
 	}
 
+	decim1, _ := GetDecimal("73447,91")
+	decim2, _ := GetDecimal("734488877,91")
 	testTable := []testCase{
 		{name: "Opening balance is correct", input: ":60F:C120216UAH73447,91\r\n", expectedResult: &OpeningBalance{
-			Type:     CREDIT,
-			Date:     time.Date(2016, 02, 12, 0, 0, 0, 0, time.Local),
+			Type: CREDIT,
+			Date: InternalDate{
+				Year:  12,
+				Month: 2,
+				Day:   16,
+			},
 			Currency: "UAH",
-			Amount:   decimal.New(7344791, -2),
+			Amount:   decim1,
+		}, hasError: false},
+		{name: "Opening balance is correct", input: ":60F:D110122PLN734488877,91\r\n", expectedResult: &OpeningBalance{
+			Type: DEBIT,
+			Date: InternalDate{
+				Year:  11,
+				Month: 1,
+				Day:   22,
+			},
+			Currency: "PLN",
+			Amount:   decim2,
 		}, hasError: false},
 		{name: "Statement number is empty", input: ":60F:\r\n", expectedResult: nil, hasError: true},
 		{name: "Statement number is too short", input: ":60F:C\r\n", expectedResult: nil, hasError: true},
