@@ -127,41 +127,94 @@ func TestOpeningBalanceCase(t *testing.T) {
 	type testCase struct {
 		name           string
 		input          string
-		expectedResult *OpeningBalance
+		expectedResult *Balance
 		hasError       bool
 	}
 
 	decim1, _ := GetDecimal("73447,91")
 	decim2, _ := GetDecimal("734488877,91")
 	testTable := []testCase{
-		{name: "Opening balance is correct", input: ":60F:C120216UAH73447,91\r\n", expectedResult: &OpeningBalance{
-			Type: CREDIT,
+		{name: "Opening balance is correct", input: ":60F:C120216UAH73447,91\r\n", expectedResult: &Balance{
+			TransactionType: CREDIT,
 			Date: InternalDate{
 				Year:  12,
 				Month: 2,
 				Day:   16,
 			},
-			Currency: "UAH",
-			Amount:   decim1,
+			Currency:    "UAH",
+			Amount:      decim1,
+			BalanceType: OPENING,
 		}, hasError: false},
-		{name: "Opening balance is correct", input: ":60F:D110122PLN734488877,91\r\n", expectedResult: &OpeningBalance{
-			Type: DEBIT,
+		{name: "Opening balance is correct", input: ":60F:D110122PLN734488877,91\r\n", expectedResult: &Balance{
+			TransactionType: DEBIT,
 			Date: InternalDate{
 				Year:  11,
 				Month: 1,
 				Day:   22,
 			},
-			Currency: "PLN",
-			Amount:   decim2,
+			Currency:    "PLN",
+			Amount:      decim2,
+			BalanceType: OPENING,
 		}, hasError: false},
-		{name: "Statement number is empty", input: ":60F:\r\n", expectedResult: nil, hasError: true},
-		{name: "Statement number is too short", input: ":60F:C\r\n", expectedResult: nil, hasError: true},
-		{name: "Statement number is too long", input: ":60F:C120216UAH73447,9wwww\r\n", expectedResult: nil, hasError: true},
-		{name: "Statement number tag not found", input: ":60:01234\r\n", expectedResult: nil, hasError: true},
+		{name: "Opening balance is empty", input: ":60F:\r\n", expectedResult: nil, hasError: true},
+		{name: "Opening balance is too short", input: ":60F:C\r\n", expectedResult: nil, hasError: true},
+		{name: "Opening balance is too long", input: ":60F:C120216UAH73447,9wwww\r\n", expectedResult: nil, hasError: true},
+		{name: "Opening balance tag not found", input: ":60:01234\r\n", expectedResult: nil, hasError: true},
 	}
 
 	for _, test := range testTable {
-		actual, err := GetOpeningBalance(test.input)
+		actual, err := GetBalance(test.input, OPENING)
+		assert.Equal(t, test.expectedResult, actual, test.name)
+
+		if test.hasError {
+			assert.NotNil(t, err, test.name)
+		} else {
+			assert.Nil(t, err, test.name)
+		}
+	}
+}
+
+func TestClosingBalanceCase(t *testing.T) {
+	type testCase struct {
+		name           string
+		input          string
+		expectedResult *Balance
+		hasError       bool
+	}
+
+	decim1, _ := GetDecimal("73447,91")
+	decim2, _ := GetDecimal("734488877,91")
+	testTable := []testCase{
+		{name: "Closing balance is correct", input: ":62F:C120216UAH73447,91\r\n", expectedResult: &Balance{
+			TransactionType: CREDIT,
+			Date: InternalDate{
+				Year:  12,
+				Month: 2,
+				Day:   16,
+			},
+			Currency:    "UAH",
+			Amount:      decim1,
+			BalanceType: CLOSING,
+		}, hasError: false},
+		{name: "Closing balance is correct", input: ":62F:D110122PLN734488877,91\r\n", expectedResult: &Balance{
+			TransactionType: DEBIT,
+			Date: InternalDate{
+				Year:  11,
+				Month: 1,
+				Day:   22,
+			},
+			Currency:    "PLN",
+			Amount:      decim2,
+			BalanceType: CLOSING,
+		}, hasError: false},
+		{name: "Closing balance is empty", input: ":62F:\r\n", expectedResult: nil, hasError: true},
+		{name: "Closing balance is too short", input: ":62F:C\r\n", expectedResult: nil, hasError: true},
+		{name: "Closing balance is too long", input: ":62F:C120216UAH73447,9wwww\r\n", expectedResult: nil, hasError: true},
+		{name: "Closing balance tag not found", input: ":62:01234\r\n", expectedResult: nil, hasError: true},
+	}
+
+	for _, test := range testTable {
+		actual, err := GetBalance(test.input, CLOSING)
 		assert.Equal(t, test.expectedResult, actual, test.name)
 
 		if test.hasError {

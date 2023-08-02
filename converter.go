@@ -17,6 +17,7 @@ const (
 	accountIdentification = ":25:"
 	statementNumber       = ":28C:"
 	openingBalance        = ":60F:"
+	closingBalance        = ":62F:"
 )
 
 type ReferenceNumber struct {
@@ -40,19 +41,25 @@ type InternalDate struct {
 	Day   int64
 }
 type TransactionType string
+type BalanceType string
 
 const (
 	DEBIT  TransactionType = "D"
 	CREDIT                 = "C"
 )
+const (
+	OPENING BalanceType = "O"
+	CLOSING             = "C"
+)
 
 type MyDecimal decimal.Decimal
 
-type OpeningBalance struct {
-	Type     TransactionType
-	Date     InternalDate
-	Currency string
-	Amount   MyDecimal
+type Balance struct {
+	TransactionType TransactionType
+	Date            InternalDate
+	Currency        string
+	Amount          MyDecimal
+	BalanceType     BalanceType
 }
 
 func GetReferenceNumber(input string) (*ReferenceNumber, error) {
@@ -124,26 +131,38 @@ func GetStatementNumber(input string) (*StatementNumber, error) {
 	return &StatementNumber{Value: result}, nil
 }
 
-func GetOpeningBalance(input string) (*OpeningBalance, error) {
-	/* C120216UAH73447,91 */
-	if !strings.Contains(input, openingBalance) {
-		return nil, fmt.Errorf("no opening balance tag found. Expected tag: %s", openingBalance)
+func GetBalance(input string, balanceType BalanceType) (*Balance, error) {
+	var tag string
+	if balanceType == OPENING {
+		tag = openingBalance
+	}
+	if balanceType == CLOSING {
+		tag = closingBalance
+	}
+	if tag == "" {
+		return nil, fmt.Errorf("Incorrect tag: %v", tag)
+
+	}
+
+	if !strings.Contains(input, tag) {
+		return nil, fmt.Errorf("no proper tag found. Expected tag: %s", tag)
 	}
 	index := strings.Index(input, crlf)
-	result := input[len(openingBalance):index]
+	result := input[len(tag):index]
 	if len(result) > 25 || len(result) < 10 {
-		return nil, fmt.Errorf("the opening balance character size is incorrect. Size: %v", len(input))
+		return nil, fmt.Errorf("the balance character size is incorrect. Size: %v", len(input))
 	}
 	amount, err := GetDecimal(result[10:])
 	if err != nil {
 		return nil, fmt.Errorf("cannot parse amount. Error: %v", err)
 	}
 
-	return &OpeningBalance{
-		Type:     TransactionType(GetFirstNChars(result, 1)),
-		Date:     GetInternalDate(result[1:7]),
-		Currency: result[7:10],
-		Amount:   amount,
+	return &Balance{
+		TransactionType: TransactionType(GetFirstNChars(result, 1)),
+		Date:            GetInternalDate(result[1:7]),
+		Currency:        result[7:10],
+		Amount:          amount,
+		BalanceType:     balanceType,
 	}, nil
 }
 
