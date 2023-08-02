@@ -3,6 +3,7 @@ package mt940_converter
 import (
 	"testing"
 
+	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -273,5 +274,19 @@ func TestAvailableBalanceCase(t *testing.T) {
 		} else {
 			assert.Nil(t, err, test.name)
 		}
+	}
+}
+
+func TestGetTransactionsCase(t *testing.T) {
+	data := ":61:0710091009DN2,50NCHGNONREF//BR07282102000059\n824-OPŁ. ZA PRZEL. ELIXIR MT\n:86:824 OPŁATA ZA PRZELEW ELIXIR; TNR: 145271016138274.040001\n:61:0501120112DN449,77NTRFSP300//BR05012139000001\n944-PRZEL.KRAJ.WYCH.MT.ELX\n:86:944 CompanyNet Przelew krajowy; na rach.: 35109010560000000006093440; dla: PHU Test ul.Dolna\n1 00-950 Warszawa; tyt.: fv 100/2007; TNR: 145271016138277.020002"
+	actual, err := GetTransactions(data)
+	log.Print(actual.Value[0])
+	log.Print(actual.Value[1])
+	if err != nil {
+		assert.Nil(t, actual)
+	} else {
+		assert.NotNil(t, actual)
+		assert.NotNil(t, actual.Value[0])
+		assert.NotNil(t, actual.Value[1])
 	}
 }

@@ -16,6 +16,7 @@ const (
 	openingBalance        = ":60F:"
 	closingBalance        = ":62F:"
 	availableBalance      = ":64:"
+	transaction           = ":61:"
 )
 
 type ReferenceNumber struct {
@@ -59,6 +60,9 @@ type Balance struct {
 	Currency        string
 	Amount          MyDecimal
 	BalanceType     BalanceType
+}
+type Transaction struct {
+	Value []string
 }
 
 func GetReferenceNumber(input string) (*ReferenceNumber, error) {
@@ -165,5 +169,14 @@ func GetBalance(input string, balanceType BalanceType) (*Balance, error) {
 		Currency:        result[7:10],
 		Amount:          amount,
 		BalanceType:     balanceType,
+	}, nil
+}
+
+func GetTransactions(input string) (*Transaction, error) {
+	transactionStrings := strings.Split(input, transaction)
+	transactionStrings = transactionStrings[1:]
+
+	return &Transaction{
+		Value: transactionStrings,
 	}, nil
 }
