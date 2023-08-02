@@ -224,3 +224,54 @@ func TestClosingBalanceCase(t *testing.T) {
 		}
 	}
 }
+
+func TestAvailableBalanceCase(t *testing.T) {
+	type testCase struct {
+		name           string
+		input          string
+		expectedResult *Balance
+		hasError       bool
+	}
+
+	decim1, _ := GetDecimal("73447,91")
+	decim2, _ := GetDecimal("734488877,91")
+	testTable := []testCase{
+		{name: "Closing balance is correct", input: ":64:C120216UAH73447,91\r\n", expectedResult: &Balance{
+			TransactionType: CREDIT,
+			Date: InternalDate{
+				Year:  12,
+				Month: 2,
+				Day:   16,
+			},
+			Currency:    "UAH",
+			Amount:      decim1,
+			BalanceType: AVAILABLE,
+		}, hasError: false},
+		{name: "Available balance is correct", input: ":64:D110122PLN734488877,91\r\n", expectedResult: &Balance{
+			TransactionType: DEBIT,
+			Date: InternalDate{
+				Year:  11,
+				Month: 1,
+				Day:   22,
+			},
+			Currency:    "PLN",
+			Amount:      decim2,
+			BalanceType: AVAILABLE,
+		}, hasError: false},
+		{name: "Available balance is empty", input: ":64:\r\n", expectedResult: nil, hasError: true},
+		{name: "Available balance is too short", input: ":64:C\r\n", expectedResult: nil, hasError: true},
+		{name: "Available balance is too long", input: ":64:C120216UAH73447,9wwww\r\n", expectedResult: nil, hasError: true},
+		{name: "Available balance tag not found", input: ":62F:01234\r\n", expectedResult: nil, hasError: true},
+	}
+
+	for _, test := range testTable {
+		actual, err := GetBalance(test.input, AVAILABLE)
+		assert.Equal(t, test.expectedResult, actual, test.name)
+
+		if test.hasError {
+			assert.NotNil(t, err, test.name)
+		} else {
+			assert.Nil(t, err, test.name)
+		}
+	}
+}

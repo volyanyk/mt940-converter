@@ -18,6 +18,7 @@ const (
 	statementNumber       = ":28C:"
 	openingBalance        = ":60F:"
 	closingBalance        = ":62F:"
+	availableBalance      = ":64:"
 )
 
 type ReferenceNumber struct {
@@ -48,8 +49,9 @@ const (
 	CREDIT                 = "C"
 )
 const (
-	OPENING BalanceType = "O"
-	CLOSING             = "C"
+	OPENING   BalanceType = "O"
+	CLOSING               = "C"
+	AVAILABLE             = "A"
 )
 
 type MyDecimal decimal.Decimal
@@ -139,8 +141,11 @@ func GetBalance(input string, balanceType BalanceType) (*Balance, error) {
 	if balanceType == CLOSING {
 		tag = closingBalance
 	}
+	if balanceType == AVAILABLE {
+		tag = availableBalance
+	}
 	if tag == "" {
-		return nil, fmt.Errorf("Incorrect tag: %v", tag)
+		return nil, fmt.Errorf("incorrect tag: %v", tag)
 
 	}
 
