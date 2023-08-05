@@ -4,19 +4,21 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/rs/zerolog/log"
 	"github.com/shopspring/decimal"
 )
 
 const (
-	crlf                  = "\r\n"
-	referenceNumber       = ":20:"
-	relatedReference      = ":21:"
-	accountIdentification = ":25:"
-	statementNumber       = ":28C:"
-	openingBalance        = ":60F:"
-	closingBalance        = ":62F:"
-	availableBalance      = ":64:"
-	transaction           = ":61:"
+	crlf                   = "\r\n"
+	referenceNumber        = ":20:"
+	relatedReference       = ":21:"
+	accountIdentification  = ":25:"
+	statementNumber        = ":28C:"
+	openingBalance         = ":60F:"
+	closingBalance         = ":62F:"
+	availableBalance       = ":64:"
+	transaction            = ":61:"
+	transactionDescription = ":86:"
 )
 
 type ReferenceNumber struct {
@@ -34,8 +36,12 @@ type AccountIdentification struct {
 	Iban       string
 	Currency   string
 }
-type InternalDate struct {
+type LongDate struct {
 	Year  int64
+	Month int64
+	Day   int64
+}
+type ShortDate struct {
 	Month int64
 	Day   int64
 }
@@ -56,13 +62,19 @@ type MyDecimal decimal.Decimal
 
 type Balance struct {
 	TransactionType TransactionType
-	Date            InternalDate
+	Date            LongDate
 	Currency        string
 	Amount          MyDecimal
 	BalanceType     BalanceType
 }
+type TransactionStatement struct {
+}
+type TransactionInformation struct {
+}
 type Transaction struct {
-	Value []string
+	Index       int
+	Statement   TransactionStatement
+	Information TransactionInformation
 }
 
 func GetReferenceNumber(input string) (*ReferenceNumber, error) {
@@ -165,18 +177,43 @@ func GetBalance(input string, balanceType BalanceType) (*Balance, error) {
 
 	return &Balance{
 		TransactionType: TransactionType(GetFirstNChars(result, 1)),
-		Date:            GetInternalDate(result[1:7]),
+		Date:            GetLongDate(result[1:7]),
 		Currency:        result[7:10],
 		Amount:          amount,
 		BalanceType:     balanceType,
 	}, nil
 }
 
-func GetTransactions(input string) (*Transaction, error) {
-	transactionStrings := strings.Split(input, transaction)
-	transactionStrings = transactionStrings[1:]
+func GetTransactions(input string) (*[]Transaction, error) {
+	transactionStrings := strings.Split(input, transaction)[1:]
+	var transactions []Transaction
+	for i, transactionString := range transactionStrings {
+		statement := GetStatement(transactionString)
+		info := GetTransactionInfo(transactionString)
 
-	return &Transaction{
-		Value: transactionStrings,
-	}, nil
+		transactions = append(transactions, Transaction{
+			Index:       i + 1,
+			Statement:   statement,
+			Information: info,
+		})
+	}
+	index := strings.Index(input, transactionDescription)
+	result := input[len(transactionDescription):index]
+	log.Printf(result)
+	return &transactions, nil
+}
+
+func GetTransactionInfo(transactionString string) TransactionInformation {
+	var info = transactionString[strings.LastIndex(transactionString, transactionDescription)+len(transactionDescription):]
+	log.Printf(info)
+	return TransactionInformation{}
+}
+
+func GetStatement(transactionString string) TransactionStatement {
+	var stmt = transactionString[:strings.Index(transactionString, transactionDescription)]
+	var valueLongDate = GetLongDate(stmt[:6])
+	var valueShortDate = GetShortDate(stmt[strings.Index(transactionString, stmt[:6]):4])
+	log.Print(valueLongDate)
+	log.Print(valueShortDate)
+	return TransactionStatement{}
 }

@@ -9,10 +9,10 @@ import (
 	"github.com/shopspring/decimal"
 )
 
-func GetInternalDate(s string) InternalDate {
+func GetLongDate(s string) LongDate {
 	if len(s) > 6 && len(s) < 1 {
 		log.Error().Msg("Incorrect date length")
-		return InternalDate{}
+		return LongDate{}
 	}
 	year, err := strconv.ParseInt(s[0:2], 10, 8)
 	month, err := strconv.ParseInt(s[2:4], 10, 8)
@@ -20,11 +20,30 @@ func GetInternalDate(s string) InternalDate {
 
 	if err != nil {
 		log.Err(err)
-		return InternalDate{}
+		return LongDate{}
 	}
 
-	return InternalDate{
+	return LongDate{
 		Year:  year,
+		Month: month,
+		Day:   day,
+	}
+}
+
+func GetShortDate(s string) ShortDate {
+	if len(s) > 4 && len(s) < 1 {
+		log.Error().Msg("Incorrect date length")
+		return ShortDate{}
+	}
+	month, err := strconv.ParseInt(s[0:2], 10, 8)
+	day, err := strconv.ParseInt(s[2:4], 10, 8)
+
+	if err != nil {
+		log.Err(err)
+		return ShortDate{}
+	}
+
+	return ShortDate{
 		Month: month,
 		Day:   day,
 	}
