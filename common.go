@@ -91,3 +91,7 @@ func validateString(input string) (string, bool) {
 	}
 	return "", false
 }
+
+func GetTransactionType(result string) TransactionType {
+	return TransactionType(result)
+}

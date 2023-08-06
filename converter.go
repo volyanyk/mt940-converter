@@ -176,7 +176,7 @@ func GetBalance(input string, balanceType BalanceType) (*Balance, error) {
 	}
 
 	return &Balance{
-		TransactionType: TransactionType(GetFirstNChars(result, 1)),
+		TransactionType: GetTransactionType(GetFirstNChars(result, 1)),
 		Date:            GetLongDate(result[1:7]),
 		Currency:        result[7:10],
 		Amount:          amount,
@@ -212,8 +212,10 @@ func GetTransactionInfo(transactionString string) TransactionInformation {
 func GetStatement(transactionString string) TransactionStatement {
 	var stmt = transactionString[:strings.Index(transactionString, transactionDescription)]
 	var valueLongDate = GetLongDate(stmt[:6])
-	var valueShortDate = GetShortDate(stmt[strings.Index(transactionString, stmt[:6]):4])
+	var valueShortDate = GetShortDate(stmt[6:10])
+	var transactionType = GetTransactionType(stmt[10:11])
 	log.Print(valueLongDate)
 	log.Print(valueShortDate)
+	log.Print(transactionType)
 	return TransactionStatement{}
 }
