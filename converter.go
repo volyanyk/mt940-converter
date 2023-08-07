@@ -214,8 +214,12 @@ func GetStatement(transactionString string) TransactionStatement {
 	var valueLongDate = GetLongDate(stmt[:6])
 	var valueShortDate = GetShortDate(stmt[6:10])
 	var transactionType = GetTransactionType(stmt[10:11])
+	//var transactionAmout = GetAmount(stmt[11:])
+	//_ := regexp.MustCompile("^([A-Za-z])?(\\d{1,12},\\d{2}|\\d{1,3},\\d{3},\\d{2}|\\d{1,15})[A-Za-z]$")
+
 	log.Print(valueLongDate)
 	log.Print(valueShortDate)
 	log.Print(transactionType)
+	//log.Print(transactionAmout)
 	return TransactionStatement{}
 }
