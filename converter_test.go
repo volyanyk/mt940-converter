@@ -3,7 +3,6 @@ package mt940_converter
 import (
 	"testing"
 
-	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -278,21 +277,122 @@ func TestAvailableBalanceCase(t *testing.T) {
 }
 
 func TestGetTransactionsCase(t *testing.T) {
-	data := ":61:0710091009DN2,50NCHGNONREF//BR07282102000059\n824-OPŁ. ZA PRZEL. ELIXIR MT\n:86:824 OPŁATA ZA PRZELEW ELIXIR; TNR: 145271016138274.040001\n" +
-		":61:0501120112DN449,77NTRFSP300//BR05012139000001\n944-PRZEL.KRAJ.WYCH.MT.ELX\n:86:944 CompanyNet Przelew krajowy; na rach.: 35109010560000000006093440; dla: PHU Test ul.Dolna\n1 00-950 Warszawa; tyt.: fv 100/2007; TNR: 145271016138277.020002" +
-		":61:2306040604D1,89S07397301056237\n:86:073\n:86:073~00VE02\n~20PàatnoòÜ kart• 02.06.2023 \n~21Nr karty 4246xx4970~22\n~23~24\n~25\n~3010500031~311915031/19730\n~32BOLT.EU/R/2306021457      ~33Tallinn \n~34073"
-	actual, err := GetTransactions(data)
-	log.Print(actual)
-	log.Print(err)
-	//log.Print(actual.Value[0])
-	//log.Print(actual.Value[1])
-	//log.Print(actual.Value[2])
-	//if err != nil {
-	//	assert.Nil(t, actual)
-	//} else {
-	//	assert.NotNil(t, actual)
-	//	assert.NotNil(t, actual.Value[0])
-	//	assert.NotNil(t, actual.Value[1])
-	//	assert.NotNil(t, actual.Value[2])
-	//}2
+	//data := "" +
+	//	":61:0501120112DN449,77NTRFSP300//BR05012139000001\n944-PRZEL.KRAJ.WYCH.MT.ELX\n:86:944 CompanyNet Przelew krajowy; na rach.: 35109010560000000006093440; dla: PHU Test ul.Dolna\n1 00-950 Warszawa; tyt.: fv 100/2007; TNR: 145271016138277.020002" +
+	//	":61:2306040604D1,89S07397301056237\n:86:073\n:86:073~00VE02\n~20PàatnoòÜ kart• 02.06.2023 \n~21Nr karty 4246xx4970~22\n~23~24\n~25\n~3010500031~311915031/19730\n~32BOLT.EU/R/2306021457      ~33Tallinn \n~34073"
+	type testCase struct {
+		name           string
+		input          string
+		expectedResult *[]Transaction
+		hasError       bool
+	}
+	decim1, _ := GetDecimal("2,50")
+	decim2, _ := GetDecimal("449,77")
+	decim3, _ := GetDecimal("1,89")
+	testTable := []testCase{
+		{
+			name:  "Successful parsing the transaction",
+			input: ":61:0710091009DN2,50NCHGNONREF//BR07282102000059\n824-OPŁ. ZA PRZEL. ELIXIR MT\n:86:824 OPŁATA ZA PRZELEW ELIXIR; TNR: 145271016138274.040001\n",
+			expectedResult: &[]Transaction{
+				{
+					Index: 1,
+					Statement: TransactionStatement{
+						LongDate: LongDate{
+							Year:  7,
+							Month: 10,
+							Day:   9,
+						},
+						ShortDate: ShortDate{
+							Month: 10,
+							Day:   9,
+						},
+						TransactionType:        DEBIT,
+						ThirdCurrencyCharacter: "N",
+						Amount:                 decim1,
+						DescriptionPrefix:      "N",
+						Description:            "CHGNONREF//BR07282102000059 824-OPŁ. ZA PRZEL. ELIXIR MT ",
+					},
+					Information: TransactionInformation{Info: "824 OPŁATA ZA PRZELEW ELIXIR; TNR: 145271016138274.040001\n"},
+				}},
+			hasError: false,
+		}, {
+			name: "Successful parsing the transaction, but as list",
+			input: ":61:0710091009DN2,50NCHGNONREF//BR07282102000059\n824-OPŁ. ZA PRZEL. ELIXIR MT\n:86:824 OPŁATA ZA PRZELEW ELIXIR; TNR: 145271016138274.040001\n" +
+				":61:0501120112DN449,77NTRFSP300//BR05012139000001\n944-PRZEL.KRAJ.WYCH.MT.ELX\n:86:944 CompanyNet Przelew krajowy; na rach.: 35109010560000000006093440; dla: PHU Test ul.Dolna\n1 00-950 Warszawa; tyt.: fv 100/2007; TNR: 145271016138277.020002" +
+				":61:2306040604D1,89S07397301056237\n:86:073\n:86:073~00VE02\n~20PàatnoòÜ kart• 02.06.2023 \n~21Nr karty 4246xx4970~22\n~23~24\n~25\n~3010500031~311915031/19730\n~32BOLT.EU/R/2306021457      ~33Tallinn \n~34073",
+			expectedResult: &[]Transaction{
+				{
+					Index: 1,
+					Statement: TransactionStatement{
+						LongDate: LongDate{
+							Year:  7,
+							Month: 10,
+							Day:   9,
+						},
+						ShortDate: ShortDate{
+							Month: 10,
+							Day:   9,
+						},
+						TransactionType:        DEBIT,
+						ThirdCurrencyCharacter: "N",
+						Amount:                 decim1,
+						DescriptionPrefix:      "N",
+						Description:            "CHGNONREF//BR07282102000059 824-OPŁ. ZA PRZEL. ELIXIR MT ",
+					},
+					Information: TransactionInformation{Info: "824 OPŁATA ZA PRZELEW ELIXIR; TNR: 145271016138274.040001\n"},
+				},
+				{
+					Index: 2,
+					Statement: TransactionStatement{
+						LongDate: LongDate{
+							Year:  5,
+							Month: 1,
+							Day:   12,
+						},
+						ShortDate: ShortDate{
+							Month: 1,
+							Day:   12,
+						},
+						TransactionType:        DEBIT,
+						ThirdCurrencyCharacter: "N",
+						Amount:                 decim2,
+						DescriptionPrefix:      "N",
+						Description:            "TRFSP300//BR05012139000001 944-PRZEL.KRAJ.WYCH.MT.ELX ",
+					},
+					Information: TransactionInformation{Info: "944 CompanyNet Przelew krajowy; na rach.: 35109010560000000006093440; dla: PHU Test ul.Dolna\n1 00-950 Warszawa; tyt.: fv 100/2007; TNR: 145271016138277.020002"},
+				},
+				{
+					Index: 3,
+					Statement: TransactionStatement{
+						LongDate: LongDate{
+							Year:  23,
+							Month: 6,
+							Day:   4,
+						},
+						ShortDate: ShortDate{
+							Month: 6,
+							Day:   4,
+						},
+						TransactionType:        DEBIT,
+						ThirdCurrencyCharacter: "",
+						Amount:                 decim3,
+						DescriptionPrefix:      "S",
+						Description:            "07397301056237 ",
+					},
+					Information: TransactionInformation{Info: "073~00VE02\n~20PàatnoòÜ kart• 02.06.2023 \n~21Nr karty 4246xx4970~22\n~23~24\n~25\n~3010500031~311915031/19730\n~32BOLT.EU/R/2306021457      ~33Tallinn \n~34073"},
+				}},
+			hasError: false,
+		},
+	}
+
+	for _, test := range testTable {
+		actual, err := GetTransactions(test.input)
+		assert.Equal(t, test.expectedResult, actual, test.name)
+
+		if test.hasError {
+			assert.NotNil(t, err, test.name)
+		} else {
+			assert.Nil(t, err, test.name)
+		}
+	}
 }

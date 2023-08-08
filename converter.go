@@ -2,6 +2,7 @@ package mt940_converter
 
 import (
 	"fmt"
+	"regexp"
 	"strings"
 
 	"github.com/rs/zerolog/log"
@@ -68,8 +69,16 @@ type Balance struct {
 	BalanceType     BalanceType
 }
 type TransactionStatement struct {
+	LongDate               LongDate
+	ShortDate              ShortDate
+	TransactionType        TransactionType
+	ThirdCurrencyCharacter string
+	Amount                 MyDecimal
+	Description            string
+	DescriptionPrefix      string
 }
 type TransactionInformation struct {
+	Info string
 }
 type Transaction struct {
 	Index       int
@@ -197,16 +206,13 @@ func GetTransactions(input string) (*[]Transaction, error) {
 			Information: info,
 		})
 	}
-	index := strings.Index(input, transactionDescription)
-	result := input[len(transactionDescription):index]
-	log.Printf(result)
 	return &transactions, nil
 }
 
 func GetTransactionInfo(transactionString string) TransactionInformation {
 	var info = transactionString[strings.LastIndex(transactionString, transactionDescription)+len(transactionDescription):]
 	log.Printf(info)
-	return TransactionInformation{}
+	return TransactionInformation{Info: info}
 }
 
 func GetStatement(transactionString string) TransactionStatement {
@@ -214,12 +220,24 @@ func GetStatement(transactionString string) TransactionStatement {
 	var valueLongDate = GetLongDate(stmt[:6])
 	var valueShortDate = GetShortDate(stmt[6:10])
 	var transactionType = GetTransactionType(stmt[10:11])
-	//var transactionAmout = GetAmount(stmt[11:])
-	//_ := regexp.MustCompile("^([A-Za-z])?(\\d{1,12},\\d{2}|\\d{1,3},\\d{3},\\d{2}|\\d{1,15})[A-Za-z]$")
+	regex := regexp.MustCompile("^([A-Za-z])?(\\d{1,12},\\d{2}|\\d{1,3},\\d{3},\\d{2}|\\d{1,15})([A-Za-z])(.*?)$")
+	matches := regex.FindStringSubmatch(regexp.MustCompile(`\r?\n`).ReplaceAllString(stmt[11:], " "))
+	if matches != nil {
+		thirdCurrencyCharacter := matches[1]
+		amount, _ := GetDecimal(matches[2])
+		descriptionPrefix := matches[3]
+		descr := matches[4]
 
-	log.Print(valueLongDate)
-	log.Print(valueShortDate)
-	log.Print(transactionType)
-	//log.Print(transactionAmout)
+		return TransactionStatement{
+			LongDate:               valueLongDate,
+			ShortDate:              valueShortDate,
+			TransactionType:        transactionType,
+			ThirdCurrencyCharacter: thirdCurrencyCharacter,
+			Amount:                 amount,
+			DescriptionPrefix:      descriptionPrefix,
+			Description:            descr,
+		}
+	}
 	return TransactionStatement{}
+
 }
