@@ -1,6 +1,7 @@
 package mt940_converter
 
 import (
+	"errors"
 	"strconv"
 	"strings"
 	"unicode"
@@ -9,44 +10,41 @@ import (
 	"github.com/shopspring/decimal"
 )
 
-func GetLongDate(s string) LongDate {
-	if len(s) > 6 && len(s) < 1 {
+func GetLongDate(s string) (*LongDate, error) {
+	if len(s) != 6 {
 		log.Error().Msg("Incorrect date length")
-		return LongDate{}
+		return nil, errors.New("incorrect date length")
 	}
 	year, err := strconv.ParseInt(s[0:2], 10, 8)
 	month, err := strconv.ParseInt(s[2:4], 10, 8)
 	day, err := strconv.ParseInt(s[4:6], 10, 8)
 
 	if err != nil {
-		log.Err(err)
-		return LongDate{}
+		return nil, err
 	}
 
-	return LongDate{
+	return &LongDate{
 		Year:  year,
 		Month: month,
 		Day:   day,
-	}
+	}, nil
 }
 
-func GetShortDate(s string) ShortDate {
-	if len(s) > 4 && len(s) < 1 {
-		log.Error().Msg("Incorrect date length")
-		return ShortDate{}
+func GetShortDate(s string) (*ShortDate, error) {
+	if len(s) != 4 {
+		return nil, errors.New("incorrect date length")
 	}
 	month, err := strconv.ParseInt(s[0:2], 10, 8)
 	day, err := strconv.ParseInt(s[2:4], 10, 8)
 
 	if err != nil {
-		log.Err(err)
-		return ShortDate{}
+		return nil, err
 	}
 
-	return ShortDate{
+	return &ShortDate{
 		Month: month,
 		Day:   day,
-	}
+	}, nil
 }
 
 func GetDecimal(s string) (MyDecimal, error) {
@@ -54,7 +52,6 @@ func GetDecimal(s string) (MyDecimal, error) {
 
 	decimalNumber, err := decimal.NewFromString(numberWithoutComma)
 	if err != nil {
-		log.Err(err)
 		return MyDecimal{}, err
 	}
 

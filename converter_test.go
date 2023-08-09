@@ -277,9 +277,6 @@ func TestAvailableBalanceCase(t *testing.T) {
 }
 
 func TestGetTransactionsCase(t *testing.T) {
-	//data := "" +
-	//	":61:0501120112DN449,77NTRFSP300//BR05012139000001\n944-PRZEL.KRAJ.WYCH.MT.ELX\n:86:944 CompanyNet Przelew krajowy; na rach.: 35109010560000000006093440; dla: PHU Test ul.Dolna\n1 00-950 Warszawa; tyt.: fv 100/2007; TNR: 145271016138277.020002" +
-	//	":61:2306040604D1,89S07397301056237\n:86:073\n:86:073~00VE02\n~20PàatnoòÜ kart• 02.06.2023 \n~21Nr karty 4246xx4970~22\n~23~24\n~25\n~3010500031~311915031/19730\n~32BOLT.EU/R/2306021457      ~33Tallinn \n~34073"
 	type testCase struct {
 		name           string
 		input          string
